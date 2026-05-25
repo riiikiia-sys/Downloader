@@ -1,0 +1,6 @@
+{
+  "name": "Video Downloader",
+  "description": "On-device video stream detector and downloader using local extraction and Android's Download system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
