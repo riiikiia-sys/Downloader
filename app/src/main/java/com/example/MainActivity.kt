@@ -148,7 +148,7 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
 
             // Main Header Tagline
             Text(
-                text = "On-Device Local Stream Extractor",
+                text = "Instant Stream Downloader",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.secondary,
@@ -156,7 +156,7 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
             )
 
             Text(
-                text = "Detect and download public videos instantly without intermediate cloud APIs.",
+                text = "Paste any link to detect and download public video and audio streams instantly with Cobalt API.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center,

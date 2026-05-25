@@ -23,7 +23,7 @@ import java.util.UUID
 class DownloadViewModel(application: Application) : AndroidViewModel(application) {
     private val TAG = "DownloadViewModel"
     private val workManager = WorkManager.getInstance(application)
-    private var webViewExtractor: LocalWebViewExtractor? = null
+    private val cobaltRepository = CobaltRepository()
 
     // UI Input field
     private val _urlInput = MutableStateFlow("")
@@ -51,13 +51,6 @@ class DownloadViewModel(application: Application) : AndroidViewModel(application
     private val _showSnackbar = MutableSharedFlow<String>()
     val showSnackbar: SharedFlow<String> = _showSnackbar.asSharedFlow()
 
-    init {
-        // Build direct local webview extractor with application context
-        webViewExtractor = LocalWebViewExtractor(application) { event ->
-            handleExtractionEvent(event)
-        }
-    }
-
     fun onUrlChange(newUrl: String) {
         _urlInput.value = newUrl
     }
@@ -75,20 +68,28 @@ class DownloadViewModel(application: Application) : AndroidViewModel(application
         }
 
         _extractedVideoInfo.value = null
-        webViewExtractor?.startExtraction(url)
-    }
+        
+        val platform = when {
+            url.contains("youtube.com") || url.contains("youtu.be") -> "YouTube"
+            url.contains("tiktok.com") -> "TikTok"
+            url.contains("instagram.com") -> "Instagram"
+            url.contains("facebook.com") || url.contains("fb") -> "Facebook"
+            else -> "Generic Web"
+        }
 
-    private fun handleExtractionEvent(event: ExtractionEvent) {
-        _extractionEvent.value = event
-        when (event) {
-            is ExtractionEvent.Success -> {
-                _extractedVideoInfo.value = event.videoInfo
+        viewModelScope.launch {
+            _extractionEvent.value = ExtractionEvent.Loading(platform)
+            _extractionEvent.value = ExtractionEvent.Progress("Sending extraction request to Cobalt API...")
+            try {
+                val videoInfo = cobaltRepository.extractVideo(url)
+                _extractedVideoInfo.value = videoInfo
+                _extractionEvent.value = ExtractionEvent.Success(videoInfo)
                 announceMsg("Successfully detected visual stream options!")
+            } catch (e: Exception) {
+                val errorMsg = e.localizedMessage ?: "Failed extracting video from Cobalt"
+                _extractionEvent.value = ExtractionEvent.Error(errorMsg)
+                announceMsg(errorMsg)
             }
-            is ExtractionEvent.Error -> {
-                announceMsg(event.message)
-            }
-            else -> {}
         }
     }
 
@@ -167,11 +168,9 @@ class DownloadViewModel(application: Application) : AndroidViewModel(application
         _urlInput.value = ""
         _extractedVideoInfo.value = null
         _extractionEvent.value = ExtractionEvent.Idle
-        webViewExtractor?.destroyWebView()
     }
 
     override fun onCleared() {
         super.onCleared()
-        webViewExtractor?.destroyWebView()
     }
 }
