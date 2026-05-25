@@ -1,4 +1,4 @@
-concurrency:name: Build APK
+name: Build APK
 
 on:
   push:
