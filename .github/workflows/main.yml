@@ -1,4 +1,4 @@
-name: Build APK
+concurrency:name: Build APK
 
 on:
   push:
@@ -20,10 +20,17 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Decode Keystore
+        run: |
+          base64 -d debug.keystore.base64 > debug.keystore
+
       - name: Build APK
-        run: gradle :app:assembleDebug --no-daemon
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        run: |
+          gradle :app:assembleDebug --no-daemon \
+          -Pandroid.injected.signing.store.file=$PWD/debug.keystore \
+          -Pandroid.injected.signing.store.password=android \
+          -Pandroid.injected.signing.key.alias=androiddebugkey \
+          -Pandroid.injected.signing.key.password=android
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
